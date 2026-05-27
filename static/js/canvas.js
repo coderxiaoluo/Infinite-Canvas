@@ -858,6 +858,7 @@ function serializableCanvasNode(node){
     delete copy.runError;
     delete copy._cascadeIdx;
     delete copy._cascadeFailed;
+    delete copy._activeLoopCtx;
     return copy;
 }
 function serializableCanvasNodes(list=nodes){
@@ -1662,6 +1663,11 @@ function addLoopNode(point){
         count:3,
         mode:'serial',
         showPrompt:false,
+        imageInput:false,
+        videoInput:false,
+        loopStart:1,
+        imageBatchSize:1,
+        videoBatchSize:1,
         variablePrompt:'',
         fixedPrompt:''
     });
@@ -4562,7 +4568,7 @@ function renderNode(node){
         if(e.button !== 0 || !isNodeDragSurface(e.target)) return;
         startNodeDrag(e, node);
     };
-    const canInput = ['generator','comfy','ltxDirector','output','llm','msgen','video','rh'].includes(node.type) || (node.type === 'loop' && (node.imageInput || node.showPrompt));
+    const canInput = ['generator','comfy','ltxDirector','output','llm','msgen','video','rh'].includes(node.type) || (node.type === 'loop' && (node.imageInput || node.videoInput || node.showPrompt));
     const canOutput = ['image','prompt','loop','group','promptGroup','generator','comfy','ltxDirector','llm','msgen','video','rh','output'].includes(node.type);
     if(canInput) el.insertAdjacentHTML('beforeend', `<div class="port in" title="${tr('canvas.connectHere')}"></div>`);
     if(canOutput) el.insertAdjacentHTML('beforeend', `<div class="port out" title="${tr('canvas.dragConnect')}"></div>`);
@@ -4788,6 +4794,42 @@ function loopInputImageRefs(node, ctx=loopContext){
     const start = Math.max(0, currentIndex - 1);
     return allRefs.slice(start, start + batchSize);
 }
+function videoRefsFromNode(node){
+    if(!node) return [];
+    if(node.type === 'image' && node.url && mediaKindForNode(node) === 'video') return [{url:node.url, name:node.name || 'video', role:node.role || '', kind:'video'}];
+    if(node.type === 'group'){
+        return (node.items || [])
+            .map(id => nodes.find(x => x.id === id))
+            .filter(x => x?.type === 'image' && x?.url && mediaKindForNode(x) === 'video')
+            .map(vid => ({url:vid.url, name:vid.name || 'video', role:vid.role || '', kind:'video'}));
+    }
+    if(node.type === 'output'){
+        return (node.images || [])
+            .map((item, i) => ({item, i}))
+            .filter(({item}) => mediaKindForOutputItem(item) === 'video')
+            .map(({item, i}) => {
+                const url = outputUrlValue(item);
+                if(!url) return null;
+                return {url, name:outputImageName(url) || `output-${i + 1}.mp4`, kind:'video', nodeId:node.id, outputIndex:i};
+            })
+            .filter(Boolean);
+    }
+    if(CANVAS_MEDIA_OUTPUT_TYPES.includes(node.type)) return generatedImageRefs(node).filter(ref => ref.kind === 'video');
+    return [];
+}
+function loopInputVideoRefs(node, ctx=loopContext){
+    if(!node?.videoInput) return [];
+    const allRefs = connections
+        .filter(c => c.to === node.id)
+        .flatMap(c => videoRefsFromNode(nodes.find(n => n.id === c.from)))
+        .filter(ref => ref?.url);
+    if(!allRefs.length) return [];
+    const startBase = Math.max(1, Number(node.loopStart) || 1);
+    const batchSize = Math.max(1, Math.min(100, Number(node.videoBatchSize) || 1));
+    const currentIndex = Math.max(1, Number(ctx?.index || startBase) || startBase);
+    const start = Math.max(0, currentIndex - 1);
+    return allRefs.slice(start, start + batchSize);
+}
 function loopTokenLabel(token){
     if(token === '《计数》') return tr('canvas.counterToken');
     if(token === '《总数》') return tr('canvas.totalToken');
@@ -4807,10 +4849,11 @@ function autoSizeLoopNode(node, opening){
 function autoSizeLoopForPanels(node){
     if(!node) return;
     node.w = Math.max(Number(node.w || 0), 336);
-    if(node.showPrompt && node.imageInput) node.h = 390;
-    else if(node.showPrompt) node.h = 330;
-    else if(node.imageInput) node.h = 320;
-    else delete node.h;
+    const panels = (node.showPrompt ? 1 : 0) + (node.imageInput ? 1 : 0) + (node.videoInput ? 1 : 0);
+    if(panels === 0) { delete node.h; return; }
+    if(panels === 1) node.h = node.showPrompt ? 330 : 320;
+    else if(panels === 2) node.h = (node.showPrompt && (node.imageInput || node.videoInput)) ? 390 : 380;
+    else node.h = 460;
 }
 function loopTokenChipHtml(token){
     return `<span class="loop-token-chip" contenteditable="false" data-token="${escapeAttr(token)}"><span>${escapeHtml(loopTokenLabel(token))}</span><button type="button" aria-label="${tr('common.delete')}" title="${tr('common.delete')}">×</button></span>`;
@@ -4872,10 +4915,13 @@ function renderLoopBody(node){
     node.count = loopCount(node);
     node.loopStart = Math.max(1, Number(node.loopStart) || 1);
     node.imageBatchSize = Math.max(1, Math.min(100, Number(node.imageBatchSize) || 1));
+    node.videoBatchSize = Math.max(1, Math.min(100, Number(node.videoBatchSize) || 1));
     node.mode = node.mode === 'parallel' ? 'parallel' : 'serial';
     node.showPrompt = Boolean(node.showPrompt);
     node.imageInput = Boolean(node.imageInput);
+    node.videoInput = Boolean(node.videoInput);
     const imageInputCount = loopInputImageRefs(node, {index:node.loopStart}).length;
+    const videoInputCount = loopInputVideoRefs(node, {index:node.loopStart}).length;
     const promptItemCount = node.showPrompt ? loopInputPromptItems(node).length : 0;
     const hasUpstreamPrompt = promptItemCount > 0;
     const loopTargetId = findLoopCascadeTarget(node.id);
@@ -4898,6 +4944,7 @@ function renderLoopBody(node){
             </div>
             <div class="loop-toggle-row">
                 <button class="loop-toggle loop-image-toggle ${node.imageInput ? 'active' : ''}" type="button"><i data-lucide="image" class="w-3.5 h-3.5"></i>${tr('canvas.loopImageToggle')}</button>
+                <button class="loop-toggle loop-video-toggle ${node.videoInput ? 'active' : ''}" type="button"><i data-lucide="clapperboard" class="w-3.5 h-3.5"></i>${tr('canvas.loopVideoToggle')}</button>
                 <button class="loop-toggle loop-prompt-toggle ${node.showPrompt ? 'active' : ''}" type="button"><i data-lucide="text-cursor-input" class="w-3.5 h-3.5"></i>${tr('canvas.loopPromptToggle')}</button>
             </div>
         </div>
@@ -4908,7 +4955,16 @@ function renderLoopBody(node){
                 <span class="loop-count-label">${tr('canvas.loopBatchSize')}</span>
                 <input class="loop-count-input loop-batch-input" type="number" min="1" max="100" step="1" value="${node.imageBatchSize}">
             </div>
-            <div class="loop-image-hint">${imageInputCount ? trf('canvas.loopImageWillOutput', {n:imageInputCount}) : tr('canvas.loopImageEmpty')}</div>
+            <div class="loop-image-hint loop-image-hint-only">${imageInputCount ? trf('canvas.loopImageWillOutput', {n:imageInputCount}) : tr('canvas.loopImageEmpty')}</div>
+        </div>` : ''}
+        ${node.videoInput ? `<div class="loop-image-panel loop-video-panel">
+            <div class="loop-image-row">
+                <span class="loop-count-label">${tr('canvas.loopImageStart')}</span>
+                <input class="loop-count-input loop-video-start-input" type="number" min="1" max="9999" step="1" value="${node.loopStart}">
+                <span class="loop-count-label">${tr('canvas.loopBatchSize')}</span>
+                <input class="loop-count-input loop-video-batch-input" type="number" min="1" max="100" step="1" value="${node.videoBatchSize}">
+            </div>
+            <div class="loop-image-hint loop-video-hint">${videoInputCount ? trf('canvas.loopVideoWillOutput', {n:videoInputCount}) : tr('canvas.loopVideoEmpty')}</div>
         </div>` : ''}
         ${node.showPrompt ? `<div class="loop-prompt-panel ${hasUpstreamPrompt ? 'has-upstream' : ''}">
             <div class="loop-field">
@@ -4927,6 +4983,7 @@ function renderLoopBody(node){
     const variable = wrap.querySelector('.loop-variable-editor');
     const toggle = wrap.querySelector('.loop-prompt-toggle');
     const imageToggle = wrap.querySelector('.loop-image-toggle');
+    const videoToggle = wrap.querySelector('.loop-video-toggle');
     if(variable) {
         variable.onmousedown = e => e.stopPropagation();
         variable.onclick = e => e.stopPropagation();
@@ -4937,10 +4994,21 @@ function renderLoopBody(node){
         if(preview) preview.textContent = renderLoopPrompt(node, {index:1, total:loopCount(node)}) || tr('canvas.noPromptMeta');
     };
     const refreshImageHint = () => {
-        const hint = wrap.querySelector('.loop-image-hint');
+        const hint = wrap.querySelector('.loop-image-hint-only');
         if(!hint) return;
         const count = loopInputImageRefs(node, {index:node.loopStart}).length;
         hint.textContent = count ? trf('canvas.loopImageWillOutput', {n:count}) : tr('canvas.loopImageEmpty');
+    };
+    const refreshVideoHint = () => {
+        const hint = wrap.querySelector('.loop-video-hint');
+        if(!hint) return;
+        const count = loopInputVideoRefs(node, {index:node.loopStart}).length;
+        hint.textContent = count ? trf('canvas.loopVideoWillOutput', {n:count}) : tr('canvas.loopVideoEmpty');
+    };
+    const syncStartInputs = source => {
+        wrap.querySelectorAll('.loop-image-start-input, .loop-video-start-input, .loop-start-input').forEach(input => {
+            if(input !== source && input.value !== String(node.loopStart)) input.value = node.loopStart;
+        });
     };
     countInput.oninput = e => {
         node.count = loopCount({count:e.target.value});
@@ -4973,6 +5041,8 @@ function renderLoopBody(node){
         startInput.oninput = e => {
             node.loopStart = Math.max(1, Number(e.target.value) || 1);
             refreshImageHint();
+            refreshVideoHint();
+            syncStartInputs(e.target);
             scheduleSave();
             syncGeneratorInputs();
             refreshGeneratorInputViews();
@@ -4985,6 +5055,8 @@ function renderLoopBody(node){
         imageStartInput.oninput = e => {
             node.loopStart = Math.max(1, Number(e.target.value) || 1);
             refreshImageHint();
+            refreshVideoHint();
+            syncStartInputs(e.target);
             scheduleSave();
             syncGeneratorInputs();
             refreshGeneratorInputViews();
@@ -4998,6 +5070,33 @@ function renderLoopBody(node){
             node.imageBatchSize = Math.max(1, Math.min(100, Number(e.target.value) || 1));
             e.target.value = node.imageBatchSize;
             refreshImageHint();
+            scheduleSave();
+            syncGeneratorInputs();
+            refreshGeneratorInputViews();
+        };
+    }
+    const videoStartInput = wrap.querySelector('.loop-video-start-input');
+    if(videoStartInput){
+        videoStartInput.onmousedown = e => e.stopPropagation();
+        videoStartInput.onclick = e => e.stopPropagation();
+        videoStartInput.oninput = e => {
+            node.loopStart = Math.max(1, Number(e.target.value) || 1);
+            refreshImageHint();
+            refreshVideoHint();
+            syncStartInputs(e.target);
+            scheduleSave();
+            syncGeneratorInputs();
+            refreshGeneratorInputViews();
+        };
+    }
+    const videoBatchInput = wrap.querySelector('.loop-video-batch-input');
+    if(videoBatchInput){
+        videoBatchInput.onmousedown = e => e.stopPropagation();
+        videoBatchInput.onclick = e => e.stopPropagation();
+        videoBatchInput.oninput = e => {
+            node.videoBatchSize = Math.max(1, Math.min(100, Number(e.target.value) || 1));
+            e.target.value = node.videoBatchSize;
+            refreshVideoHint();
             scheduleSave();
             syncGeneratorInputs();
             refreshGeneratorInputViews();
@@ -5067,6 +5166,23 @@ function renderLoopBody(node){
             if(node.imageInput){
                 node.loopStart = Math.max(1, Number(node.loopStart) || 1);
                 node.imageBatchSize = Math.max(1, Math.min(100, Number(node.imageBatchSize) || 1));
+            } else {
+                connections = connections.filter(c => c.to !== node.id || canConnect(c.from, node.id));
+            }
+            autoSizeLoopForPanels(node);
+            render();
+            scheduleSave();
+            syncGeneratorInputs();
+            refreshGeneratorInputViews();
+        };
+    }
+    if(videoToggle){
+        videoToggle.onclick = e => {
+            e.stopPropagation();
+            node.videoInput = !node.videoInput;
+            if(node.videoInput){
+                node.loopStart = Math.max(1, Number(node.loopStart) || 1);
+                node.videoBatchSize = Math.max(1, Math.min(100, Number(node.videoBatchSize) || 1));
             } else {
                 connections = connections.filter(c => c.to !== node.id || canConnect(c.from, node.id));
             }
@@ -7222,19 +7338,38 @@ function generatorSources(gen){
         }
         if(n.type === 'prompt') return {id:n.id, type:'prompt', label:(n.text || '提示词').slice(0, 32), refs:[], prompt:n.text || ''};
         if(n.type === 'loop') {
-            const prompt = renderLoopPrompt(n);
-            const refs = loopInputImageRefs(n);
-            if(refs.length){
-                const currentIndex = Math.max(1, Number(loopContext?.index || n.loopStart || 1) || 1);
-                return refs.map((ref, i) => ({
-                    id:`${n.id}:image:${currentIndex + i}:${ref.url}`,
-                    type:'loopImage',
-                    label:trf('canvas.loopImageLabel', {n:currentIndex + i}),
-                    preview:ref.url,
-                    refs:[ref],
-                    prompt:i === 0 ? prompt : ''
-                }));
+            const ctx = gen?._activeLoopCtx || loopContext || null;
+            const prompt = renderLoopPrompt(n, ctx);
+            const imageRefs = loopInputImageRefs(n, ctx);
+            const videoRefs = loopInputVideoRefs(n, ctx);
+            const out = [];
+            if(imageRefs.length){
+                const currentIndex = Math.max(1, Number(ctx?.index || n.loopStart || 1) || 1);
+                imageRefs.forEach((ref, i) => {
+                    out.push({
+                        id:`${n.id}:image:${currentIndex + i}:${ref.url}`,
+                        type:'loopImage',
+                        label:trf('canvas.loopImageLabel', {n:currentIndex + i}),
+                        preview:ref.url,
+                        refs:[ref],
+                        prompt:i === 0 && !out.length ? prompt : ''
+                    });
+                });
             }
+            if(videoRefs.length){
+                const currentIndex = Math.max(1, Number(ctx?.index || n.loopStart || 1) || 1);
+                videoRefs.forEach((ref, i) => {
+                    out.push({
+                        id:`${n.id}:video:${currentIndex + i}:${ref.url}`,
+                        type:'loopVideo',
+                        label:trf('canvas.loopVideoLabel', {n:currentIndex + i}),
+                        preview:ref.url,
+                        refs:[ref],
+                        prompt:i === 0 && !out.length ? prompt : ''
+                    });
+                });
+            }
+            if(out.length) return out;
             return {id:n.id, type:'loop', label:`${tr('canvas.loopNode')} ${loopCount(n)}x`, refs:[], prompt};
         }
         if(n.type === 'promptGroup') {
@@ -8484,11 +8619,17 @@ function runCascadeNodeByType(node, opts={}){
 }
 async function runCascadeNodeWithLoopContext(node, ctx, opts={}){
     const previous = loopContext;
+    const previousNodeCtx = node ? node._activeLoopCtx : null;
     loopContext = ctx || null;
+    if(node) node._activeLoopCtx = ctx || null;
     try {
         return await runCascadeNodeByType(node, opts);
     } finally {
         loopContext = previous;
+        if(node){
+            if(previousNodeCtx) node._activeLoopCtx = previousNodeCtx;
+            else delete node._activeLoopCtx;
+        }
     }
 }
 function cascadeParallelLimit(order, totalRounds){
@@ -8646,7 +8787,9 @@ async function runNodeCascade(nodeId){
     const loop = resolveCascadeLoop(nodeId);
     const totalRounds = loop?.count || 1;
     const startIdx = Math.max(1, Number(loop?.node?.loopStart) || 1);
-    const loopBatchSize = loop?.node?.imageInput ? Math.max(1, Math.min(100, Number(loop?.node?.imageBatchSize) || 1)) : 1;
+    const loopImageStride = loop?.node?.imageInput ? Math.max(1, Math.min(100, Number(loop?.node?.imageBatchSize) || 1)) : 0;
+    const loopVideoStride = loop?.node?.videoInput ? Math.max(1, Math.min(100, Number(loop?.node?.videoBatchSize) || 1)) : 0;
+    const loopBatchSize = Math.max(1, loopImageStride, loopVideoStride);
     const endIdx = startIdx + (totalRounds - 1) * loopBatchSize;
     const ctx = beginCascade(nodeId, order, {serial:true, mode:loop?.mode || 'serial'});
     refreshNodes(cascadeUiNodeIds(nodeId, order));
@@ -10004,8 +10147,9 @@ function canConnect(fromId, toId){
     }
     if(to.type === 'loop'){
         const allowImage = Boolean(to.imageInput) && ['image','group','output'].includes(from.type);
+        const allowVideo = Boolean(to.videoInput) && ['image','group','output'].includes(from.type);
         const allowPrompt = Boolean(to.showPrompt) && ['prompt','promptGroup','loop','llm'].includes(from.type);
-        return allowImage || allowPrompt;
+        return allowImage || allowVideo || allowPrompt;
     }
     if(to.type === 'llm') return ['prompt','loop','promptGroup','llm','image','group','output'].includes(from.type);
     if(from.type === 'llm') return CANVAS_GENERATOR_TYPES.includes(to.type);
