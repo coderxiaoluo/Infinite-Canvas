@@ -1,0 +1,9 @@
+data/
+assets/
+API/.env
+history.json
+global_config.json
+python/
+__pycache__/
+*.pyc
+.env
