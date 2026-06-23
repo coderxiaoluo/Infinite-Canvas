@@ -16,12 +16,14 @@
             } catch(e) {}
         })();
     </script>
-    <script src="/static/vendor/js/tailwindcss-cdn.js?v=2026.06.18.1779672342"></script>
-    <script src="/static/vendor/js/lucide.js?v=2026.06.18.1779672342"></script>
-    <script src="/static/js/theme.js?v=2026.06.18.1780456238"></script>
-    <script src="/static/js/i18n.js?v=2026.06.18.1780902932"></script>
-    <link rel="stylesheet" href="/static/css/canvas.css?v=2026.06.19.project-memory1">
-    <link rel="stylesheet" href="/static/css/theme.css?v=2026.06.18.1779672341">
+    <script src="/static/vendor/js/tailwindcss-cdn.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/vendor/js/lucide.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/js/theme.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/js/i18n.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/js/auth.js?v=2026.06.22.1782182652"></script>
+    <link rel="stylesheet" href="/static/css/canvas.css?v=2026.06.22.1782120241">
+    <link rel="stylesheet" href="/static/css/theme.css?v=2026.06.22.1782120241">
+    <link rel="stylesheet" href="/static/css/auth-menu.css?v=2026.06.22.1782182017">
 </head>
 <body>
     <div id="shell" class="shell no-canvas">
@@ -54,6 +56,7 @@
                     <button id="workflowTransferToggle" class="tool-btn toolbar-workflow" type="button" title="导入导出工作流" aria-label="导入导出工作流"><i data-lucide="package-open" class="w-4 h-4"></i><span>工作流</span></button>
                     <button id="canvasAssetToggle" class="tool-btn toolbar-asset canvas-asset-toggle" type="button" title="资产库" aria-label="资产库"><i data-lucide="library" class="w-4 h-4"></i><span>资产库</span></button>
                     <button id="canvasLogToggle" class="tool-btn toolbar-log" type="button" onclick="openCanvasLog(event)" title="日志" aria-label="日志" data-i18n-title="canvas.logs"><i data-lucide="list-todo" class="w-4 h-4"></i><span data-i18n="canvas.logs">日志</span></button>
+                    <div data-auth-user-menu data-compact="true"></div>
                 </div>
             </div>
         </div>
@@ -323,7 +326,8 @@
         </div>
     </div>
 
-    <script src="/static/js/ltx-director-timeline.js?v=2026.06.18.1779690908"></script>
-    <script src="/static/js/canvas.js?v=2026.06.19.project-memory2"></script>
+    <script src="/static/js/ltx-director-timeline.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/js/canvas.js?v=2026.06.22.1782120241"></script>
+    <script>document.addEventListener('DOMContentLoaded',function(){window.StudioAuth&&window.StudioAuth.initPage({redirect:false});});</script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 let providers = [];
 let selectedId = '';
+let canManageProviders = true;
 const providerList = document.getElementById('providerList');
 const editorTitle = document.getElementById('editorTitle');
 const statusEl = document.getElementById('status');
@@ -3096,6 +3097,18 @@ function removeModel(kind, index){
     renderModels(kind);
     if(kind === 'image') renderMsLoras();
 }
+async function initApiSettingsAuth(){
+    if (!window.StudioAuth) return;
+    try {
+        const status = await window.StudioAuth.getStatus(false);
+        if (!status.auth_required) return;
+        const me = await window.StudioAuth.fetchMe();
+        canManageProviders = me.can_manage_providers !== false;
+        if (!canManageProviders && statusEl) {
+            setStatus('只读模式：当前账号不可修改 API 配置');
+        }
+    } catch (e) {}
+}
 async function loadProviders(){
     setStatus(tr('api.loading'));
     try {
@@ -3110,6 +3123,10 @@ async function loadProviders(){
     }
 }
 async function saveProviders(){
+    if (!canManageProviders) {
+        alert('当前账号无权修改 API 配置（仅 Owner/Admin 可保存）');
+        return false;
+    }
     syncEditor();
     providers.forEach(item => {
         item.id = normalizeId(item.id);
@@ -3246,10 +3263,11 @@ window.addEventListener('studio-lang-change', () => {
     if(recommendInlineOpen) renderRecommendApi();
     else renderEditor();
 });
-window.onload = () => {
+window.onload = async () => {
     if(window.StudioTheme) window.StudioTheme.apply();
     if(window.StudioI18n) window.StudioI18n.apply();
     syncRecommendView();
+    await initApiSettingsAuth();
     loadProviders();
     // 平台名输入时实时预览生成的 ID
     if(nameInput) nameInput.addEventListener('input', updateIdPreview);

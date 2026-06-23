@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: infinite-canvas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: infinite_canvas
+      POSTGRES_PASSWORD: infinite_canvas
+      POSTGRES_DB: infinite_canvas
+    ports:
+      - "5433:5432"
+    volumes:
+      - infinite_canvas_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U infinite_canvas -d infinite_canvas"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  infinite_canvas_pgdata:

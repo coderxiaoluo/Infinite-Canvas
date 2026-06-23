@@ -10,13 +10,19 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3000" ^| findstr "LISTENING
 )
 timeout /t 1 /nobreak >nul
 
-echo Starting ComfyUI-API-Modelscope...
+rem 启用登录模式（需先 docker compose -f docker-compose.auth.yml up -d 并执行 alembic upgrade head）
+set "AUTH_MODE=required"
+set "DATABASE_URL=postgresql+asyncpg://infinite_canvas:infinite_canvas@127.0.0.1:5433/infinite_canvas"
+set "JWT_SECRET=change-me-to-a-long-random-string"
+
+echo Starting Infinite Canvas (AUTH_MODE=required)...
 echo Visit: http://127.0.0.1:3000/
+echo Login:  http://127.0.0.1:3000/login
 echo Admin:  http://127.0.0.1:3000/members
+echo Auth status: http://127.0.0.1:3000/api/auth/status
 echo Press Ctrl+C to stop.
 echo.
 
-start /b cmd /c "timeout /t 3 /nobreak >nul && start http://127.0.0.1:3000/"
 "%PYEXE%" main.py
 
 echo.

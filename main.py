@@ -11,6 +11,10 @@ import os
 import re
 import random
 import sys
+
+_APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+if _APP_ROOT not in sys.path:
+    sys.path.insert(0, _APP_ROOT)
 import subprocess
 import time
 import traceback
@@ -180,6 +184,16 @@ MODELSCOPE_TREE_URL = "https://www.modelscope.ai/api/v1/studio/daniel8152/Infini
 async def startup_event():
     global GLOBAL_LOOP
     GLOBAL_LOOP = asyncio.get_running_loop()
+    from auth.migrate_json import ensure_auth_data_dirs
+    from auth.database import init_auth_database
+
+    ensure_auth_data_dirs()
+    await init_auth_database()
+    try:
+        from auth.migrate_json import migrate_tenant_data_if_needed
+        await migrate_tenant_data_if_needed()
+    except Exception as exc:
+        print(f"租户数据迁移失败: {exc}")
     sync_static_html_versions()
     # 启动时整理资产库：给所有图片分组（含默认角色/场景）建好文件夹，并把根目录里的旧素材归整进去。
     try:
@@ -452,6 +466,14 @@ def load_env_file():
         print(f"加载 API/.env 失败: {e}")
 ensure_runtime_config_files()
 load_env_file()
+
+from auth.middleware import AuthMiddleware
+from auth.routes import router as auth_router
+from auth.member_routes import router as tenant_router
+
+app.add_middleware(AuthMiddleware)
+app.include_router(auth_router)
+app.include_router(tenant_router)
 
 COMFYUI_INSTANCES = [s.strip() for s in os.getenv("COMFYUI_INSTANCES", "127.0.0.1:8188").split(",") if s.strip()]
 COMFYUI_ADDRESS = COMFYUI_INSTANCES[0]
@@ -1157,12 +1179,22 @@ def normalize_provider(item):
         "volcengine_region": volc_region,
     }
 
-def load_api_providers():
+def load_api_providers(tenant_id=None):
+    from auth.tenant import api_providers_path, resolve_tenant_id
+    path = api_providers_path(resolve_tenant_id(tenant_id))
     defaults = default_api_providers()
-    if not os.path.exists(API_PROVIDERS_FILE):
+    if not os.path.exists(path):
+        if path != API_PROVIDERS_FILE and os.path.exists(API_PROVIDERS_FILE):
+            try:
+                with open(API_PROVIDERS_FILE, "r", encoding="utf-8") as f:
+                    raw = json.load(f)
+                providers = [normalize_provider(item) for item in raw if isinstance(item, dict)]
+                return merge_default_api_providers(providers or defaults)
+            except Exception as e:
+                print(f"加载 API 平台配置失败: {e}")
         return merge_default_api_providers(defaults)
     try:
-        with open(API_PROVIDERS_FILE, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             raw = json.load(f)
         providers = [normalize_provider(item) for item in raw if isinstance(item, dict)]
         return merge_default_api_providers(providers or defaults)
@@ -1170,10 +1202,12 @@ def load_api_providers():
         print(f"加载 API 平台配置失败: {e}")
         return defaults
 
-def save_api_providers(providers):
-    os.makedirs(DATA_DIR, exist_ok=True)
+def save_api_providers(providers, tenant_id=None):
+    from auth.tenant import api_providers_path, resolve_tenant_id
+    path = api_providers_path(resolve_tenant_id(tenant_id))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with GLOBAL_CONFIG_LOCK:
-        with open(API_PROVIDERS_FILE, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(providers, f, ensure_ascii=False, indent=2)
 
 def public_provider(provider):
@@ -2955,6 +2989,12 @@ def get_comfy_history(comfy_address, prompt_id):
         return {}
 
 def safe_user_id(user_id, request: Request):
+    from auth.tenant import auth_user_id, scope_from_request
+    scope = scope_from_request(request)
+    if scope.auth_required:
+        resolved = auth_user_id(scope)
+        if resolved:
+            return resolved
     candidate = (user_id or "").strip()
     if not candidate and request.client:
         candidate = f"ip-{request.client.host}"
@@ -2963,16 +3003,17 @@ def safe_user_id(user_id, request: Request):
     candidate = re.sub(r"[^a-zA-Z0-9_.-]", "-", candidate)[:80].strip(".-")
     return candidate or "anonymous"
 
-def user_dir(user_id):
-    path = os.path.join(CONVERSATION_DIR, user_id)
+def user_dir(user_id, tenant_id=None):
+    from auth.tenant import conversation_root, resolve_tenant_id
+    path = os.path.join(conversation_root(resolve_tenant_id(tenant_id)), user_id)
     os.makedirs(path, exist_ok=True)
     return path
 
-def conversation_path(user_id, conversation_id):
+def conversation_path(user_id, conversation_id, tenant_id=None):
     cleaned = re.sub(r"[^a-zA-Z0-9_-]", "", conversation_id or "")
     if not cleaned:
         raise HTTPException(status_code=400, detail="无效的对话 ID")
-    return os.path.join(user_dir(user_id), f"{cleaned}.json")
+    return os.path.join(user_dir(user_id, tenant_id), f"{cleaned}.json")
 
 def now_ms():
     return int(time.time() * 1000)
@@ -3043,9 +3084,11 @@ def normalize_canvas_kind(kind="classic"):
 PROJECTS_PATH = os.path.join(DATA_DIR, "projects.json")
 DEFAULT_PROJECT_ID = "default"
 
-def load_projects():
+def load_projects(tenant_id=None):
+    from auth.tenant import projects_path, resolve_tenant_id
+    path = projects_path(resolve_tenant_id(tenant_id))
     try:
-        with open(PROJECTS_PATH, 'r', encoding='utf-8') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         projects = data.get("projects") if isinstance(data, dict) else data
         if isinstance(projects, list):
@@ -3054,9 +3097,12 @@ def load_projects():
         pass
     return []
 
-def save_projects(projects):
+def save_projects(projects, tenant_id=None):
+    from auth.tenant import projects_path, resolve_tenant_id
+    path = projects_path(resolve_tenant_id(tenant_id))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with CANVAS_LOCK:
-        with open(PROJECTS_PATH, 'w', encoding='utf-8') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             json.dump({"projects": projects}, f, ensure_ascii=False, indent=2)
 
 def project_record(p):
@@ -3103,7 +3149,9 @@ def list_projects():
         out.append(rec)
     return out
 
-def new_canvas(title="未命名画布", icon="layers", kind="classic", project=None, board_x=None, board_y=None):
+def new_canvas(title="未命名画布", icon="layers", kind="classic", project=None, board_x=None, board_y=None, scope=None):
+    from auth.tenant import get_active_scope, stamp_canvas
+    scope = scope or get_active_scope()
     timestamp = now_ms()
     canvas_kind = normalize_canvas_kind(kind)
     canvas = {
@@ -3125,10 +3173,13 @@ def new_canvas(title="未命名画布", icon="layers", kind="classic", project=N
         canvas["board_x"] = float(board_x)
     if board_y is not None:
         canvas["board_y"] = float(board_y)
+    stamp_canvas(canvas, scope)
     save_canvas(canvas)
     return canvas
 
-def load_canvas(canvas_id):
+def load_canvas(canvas_id, scope=None):
+    from auth.tenant import assert_canvas_read, get_active_scope
+    scope = scope or get_active_scope()
     path = canvas_path(canvas_id)
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="画布不存在")
@@ -3136,14 +3187,19 @@ def load_canvas(canvas_id):
         canvas = json.load(f)
     if canvas.get("deleted_at"):
         raise HTTPException(status_code=404, detail="画布已在回收站")
+    assert_canvas_read(canvas, scope)
     return canvas
 
-def load_canvas_any(canvas_id):
+def load_canvas_any(canvas_id, scope=None):
+    from auth.tenant import assert_canvas_read, get_active_scope
+    scope = scope or get_active_scope()
     path = canvas_path(canvas_id)
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="画布不存在")
     with open(path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+        canvas = json.load(f)
+    assert_canvas_read(canvas, scope)
+    return canvas
 
 CANVAS_COLORS = {"", "red", "orange", "amber", "green", "teal", "blue", "violet", "pink", "slate"}
 
@@ -3185,7 +3241,9 @@ def cleanup_expired_canvas_trash():
             except Exception:
                 continue
 
-def iter_canvas_records(include_deleted=False):
+def iter_canvas_records(include_deleted=False, scope=None):
+    from auth.tenant import canvas_belongs_to_scope, get_active_scope
+    scope = scope or get_active_scope()
     cleanup_expired_canvas_trash()
     records = []
     for filename in os.listdir(CANVAS_DIR):
@@ -3195,6 +3253,8 @@ def iter_canvas_records(include_deleted=False):
             with open(os.path.join(CANVAS_DIR, filename), 'r', encoding='utf-8') as f:
                 data = json.load(f)
         except Exception:
+            continue
+        if not canvas_belongs_to_scope(data, scope):
             continue
         is_deleted = bool(data.get("deleted_at"))
         if include_deleted != is_deleted:
@@ -4977,13 +5037,22 @@ def migrate_asset_item_registrations(item):
     for key in AVATAR_LEGACY_FLAT_FIELDS:
         item.pop(key, None)
 
-def load_asset_library():
-    if not os.path.exists(ASSET_LIBRARY_PATH):
+def load_asset_library(tenant_id=None):
+    from auth.tenant import asset_library_path, resolve_tenant_id
+    path = asset_library_path(resolve_tenant_id(tenant_id))
+    if not os.path.exists(path):
+        if path != ASSET_LIBRARY_PATH and os.path.exists(ASSET_LIBRARY_PATH):
+            try:
+                with open(ASSET_LIBRARY_PATH, "r", encoding="utf-8") as f:
+                    lib = json.load(f)
+                return normalize_asset_library(lib)
+            except Exception:
+                pass
         lib = default_asset_library()
-        save_asset_library(lib)
+        save_asset_library(lib, tenant_id=resolve_tenant_id(tenant_id))
         return lib
     try:
-        with open(ASSET_LIBRARY_PATH, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             lib = json.load(f)
     except Exception:
         lib = default_asset_library()
@@ -5336,12 +5405,14 @@ def make_workflow_library_item_from_bytes(raw: bytes, filename: str, name: str =
         "created_at": now_ms(),
     }
 
-def save_asset_library(lib):
+def save_asset_library(lib, tenant_id=None):
+    from auth.tenant import asset_library_path, resolve_tenant_id
     lib = normalize_asset_library(lib)
     sort_asset_library_items(lib)
     lib["updated_at"] = now_ms()
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with open(ASSET_LIBRARY_PATH, "w", encoding="utf-8") as f:
+    path = asset_library_path(resolve_tenant_id(tenant_id))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(lib, f, ensure_ascii=False, indent=2)
     if GLOBAL_LOOP:
         asyncio.run_coroutine_threadsafe(manager.broadcast_asset_library_updated(int(lib["updated_at"])), GLOBAL_LOOP)
@@ -8920,6 +8991,14 @@ async def build_chat_text_reply(payload, conversation):
 async def index():
     return static_html_response("index.html")
 
+@app.get("/login")
+async def login_page():
+    return static_html_response("login.html")
+
+@app.get("/members")
+async def members_page():
+    return static_html_response("members.html")
+
 @app.get("/api/view")
 def view_image(filename: str, type: str = "input", subfolder: str = ""):
     # 先按原逻辑去各 ComfyUI 后端找
@@ -10233,7 +10312,9 @@ async def api_providers():
     return {"providers": public_api_providers()}
 
 @app.put("/api/providers")
-async def save_providers(payload: List[ApiProviderPayload]):
+async def save_providers(payload: List[ApiProviderPayload], request: Request):
+    from auth.tenant import assert_provider_manage, scope_from_request
+    assert_provider_manage(scope_from_request(request))
     providers = []
     env_updates = {}
     # 收集每个 item 的 primary 字段
@@ -12283,10 +12364,13 @@ async def get_canvas_meta(canvas_id: str):
     }
 
 @app.post("/api/canvases/{canvas_id}/meta")
-async def update_canvas_meta(canvas_id: str, payload: CanvasMetaUpdate):
+async def update_canvas_meta(canvas_id: str, payload: CanvasMetaUpdate, request: Request):
     """更新画布的轻量元数据（标题/图标/负责人/颜色/置顶）。
     刻意不走 save_canvas（它会刷新 updated_at），以免打标签/置顶把画布顶到列表最前。"""
-    canvas = load_canvas(canvas_id)
+    from auth.tenant import assert_canvas_write, scope_from_request
+    scope = scope_from_request(request)
+    canvas = load_canvas(canvas_id, scope)
+    assert_canvas_write(canvas, scope)
     if payload.title is not None:
         canvas["title"] = (payload.title or canvas.get("title") or "未命名画布")[:80]
     if payload.icon is not None:
@@ -13395,8 +13479,11 @@ async def batch_crop_asset_library_items(payload: AssetLibraryBatchCropRequest):
     return {"library": lib, "added": len(added), "items": added}
 
 @app.put("/api/canvases/{canvas_id}")
-async def update_canvas(canvas_id: str, payload: CanvasSaveRequest):
-    canvas = load_canvas(canvas_id)
+async def update_canvas(canvas_id: str, payload: CanvasSaveRequest, request: Request):
+    from auth.tenant import assert_canvas_write, scope_from_request
+    scope = scope_from_request(request)
+    canvas = load_canvas(canvas_id, scope)
+    assert_canvas_write(canvas, scope)
     current_updated_at = int(canvas.get("updated_at") or 0)
     if payload.base_updated_at and current_updated_at and int(payload.base_updated_at) < current_updated_at:
         raise HTTPException(status_code=409, detail={
@@ -13420,23 +13507,33 @@ async def update_canvas(canvas_id: str, payload: CanvasSaveRequest):
     return {"canvas": canvas}
 
 @app.delete("/api/canvases/{canvas_id}")
-async def delete_canvas(canvas_id: str):
-    canvas = load_canvas_any(canvas_id)
+async def delete_canvas(canvas_id: str, request: Request):
+    from auth.tenant import assert_canvas_write, scope_from_request
+    scope = scope_from_request(request)
+    canvas = load_canvas_any(canvas_id, scope)
+    assert_canvas_write(canvas, scope)
     if not canvas.get("deleted_at"):
         canvas["deleted_at"] = now_ms()
         save_canvas(canvas)
     return {"ok": True}
 
 @app.post("/api/canvases/{canvas_id}/restore")
-async def restore_canvas(canvas_id: str):
-    canvas = load_canvas_any(canvas_id)
+async def restore_canvas(canvas_id: str, request: Request):
+    from auth.tenant import assert_canvas_write, scope_from_request
+    scope = scope_from_request(request)
+    canvas = load_canvas_any(canvas_id, scope)
+    assert_canvas_write(canvas, scope)
     if canvas.get("deleted_at"):
         canvas.pop("deleted_at", None)
         save_canvas(canvas)
     return {"canvas": canvas}
 
 @app.delete("/api/canvases/{canvas_id}/purge")
-async def purge_canvas(canvas_id: str):
+async def purge_canvas(canvas_id: str, request: Request):
+    from auth.tenant import assert_canvas_write, scope_from_request
+    scope = scope_from_request(request)
+    canvas = load_canvas_any(canvas_id, scope)
+    assert_canvas_write(canvas, scope)
     path = canvas_path(canvas_id)
     if os.path.exists(path):
         os.remove(path)

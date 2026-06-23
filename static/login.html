@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/images/logo.png" type="image/png">
+    <title>账号登录 · AI Studio</title>
+    <script>
+        (function(){
+            try {
+                var theme = localStorage.getItem('studio_theme') || localStorage.getItem('canvas_theme') || 'light';
+                if(theme === 'dark') {
+                    document.documentElement.classList.add('studio-theme-dark');
+                    document.documentElement.classList.add('theme-dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
+    <script src="/static/vendor/js/tailwindcss-cdn.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/js/theme.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/js/auth.js?v=2026.06.22.1782182652"></script>
+    <style>
+        @import url('/static/vendor/css/fonts.css?v=2026.06.22.1782120241');
+        :root {
+            --bg: #fafafa;
+            --card: #ffffff;
+            --text: #121212;
+            --muted: #888;
+            --border: #ececec;
+            --accent: #111111;
+        }
+        html.theme-dark, body.theme-dark {
+            --bg: #0f141d;
+            --card: #151b26;
+            --text: #e5e9f0;
+            --muted: #8f9aab;
+            --border: #2a3444;
+            --accent: #ffffff;
+        }
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            width: 100%;
+            max-width: 380px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.06);
+        }
+        html.theme-dark .card { box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+        .title { font-size: 28px; font-weight: 700; letter-spacing: -.03em; text-align: center; }
+        label { display: block; font-size: 13px; color: var(--muted); margin: 18px 0 8px; }
+        label:first-of-type { margin-top: 28px; }
+        input {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            border-radius: 12px;
+            padding: 12px 14px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        input:focus { border-color: var(--accent); }
+        .btn {
+            width: 100%;
+            margin-top: 24px;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            background: var(--accent);
+            color: var(--card);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:disabled { opacity: .6; cursor: not-allowed; }
+        .error {
+            margin-top: 14px;
+            color: #dc2626;
+            font-size: 13px;
+            min-height: 18px;
+            text-align: center;
+        }
+        .mode-note {
+            margin-top: 18px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(0,0,0,.04);
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        html.theme-dark .mode-note { background: rgba(255,255,255,.05); }
+        .mode-note.info { background: rgba(59,130,246,.08); color: var(--text); }
+        .home-btn {
+            display: none;
+            width: 100%;
+            margin-top: 10px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="title">账号登录</div>
+
+        <form id="auth-form">
+            <label for="username">账号</label>
+            <input id="username" name="username" autocomplete="username" required placeholder="请输入账号">
+
+            <label for="password">密码</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码">
+
+            <button class="btn" id="submit-btn" type="submit">登录</button>
+        </form>
+
+        <button class="home-btn" id="home-btn" type="button">返回首页（无需登录）</button>
+        <div class="error" id="error-box"></div>
+        <div class="mode-note" id="mode-note" style="display:none"></div>
+    </div>
+
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var nextUrl = params.get('next') || '/';
+
+            var form = document.getElementById('auth-form');
+            var errorBox = document.getElementById('error-box');
+            var submitBtn = document.getElementById('submit-btn');
+            var modeNote = document.getElementById('mode-note');
+            var homeBtn = document.getElementById('home-btn');
+
+            function setError(msg) {
+                errorBox.textContent = msg || '';
+            }
+
+            homeBtn.addEventListener('click', function () {
+                window.location.href = '/';
+            });
+
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                setError('');
+                submitBtn.disabled = true;
+                var username = document.getElementById('username').value.trim();
+                var password = document.getElementById('password').value;
+                try {
+                    await window.StudioAuth.login(username, password);
+                    window.location.href = nextUrl;
+                } catch (e) {
+                    setError(e.message || '登录失败');
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+
+            window.StudioAuth.getStatus(true).then(function (data) {
+                if (!data.auth_required) {
+                    modeNote.style.display = 'block';
+                    modeNote.classList.add('info');
+                    modeNote.textContent = '当前未启用登录，可直接返回首页使用。';
+                    homeBtn.style.display = 'block';
+                    submitBtn.disabled = true;
+                    return;
+                }
+                if (!data.database_connected) {
+                    modeNote.style.display = 'block';
+                    modeNote.textContent = '数据库未连接，请检查 PostgreSQL 与 API/.env 配置后重启服务。';
+                    submitBtn.disabled = true;
+                    return;
+                }
+                var initialized = data.has_owner === true || (data.has_users === true && data.has_owner !== false);
+                if (!initialized) {
+                    submitBtn.textContent = '初始化主账号并登录';
+                    modeNote.style.display = 'block';
+                    modeNote.textContent = '系统尚未初始化，首次提交将创建全局唯一主账号。子账号需由主账号在管理后台添加。';
+                } else {
+                    submitBtn.textContent = '登录';
+                }
+            }).catch(function () {
+                setError('无法读取认证状态');
+            });
+        })();
+    </script>
+</body>
+</html>
