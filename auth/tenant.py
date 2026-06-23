@@ -167,6 +167,11 @@ def assert_provider_manage(scope: DataScope) -> None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权修改 API 配置")
 
 
+def assert_owner(scope: DataScope, detail: str = "无权访问此功能") -> None:
+    if scope.auth_required and not scope.is_owner():
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
+
+
 def assert_manage_members(user) -> None:
     from auth.deps import CurrentUser
 

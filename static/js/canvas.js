@@ -5731,9 +5731,9 @@ function renderNode(node){
         body.innerHTML = `<div class="blank-image"><i data-lucide="image-plus" class="w-7 h-7"></i><div class="text-[11px] font-bold">${tr('canvas.clickDragPasteImage')}</div></div>`;
             const blank = body.querySelector('.blank-image');
             blank.onclick = () => pickImageForNode(node.id);
-            blank.ondragover = e => allowImageNodeDropEvent(e, blank);
-            blank.ondragleave = e => { e.stopPropagation(); blank.classList.remove('drag-over'); };
-            blank.ondrop = e => handleImageNodeDropEvent(e, node.id, blank);
+            body.ondragover = e => allowImageNodeDropEvent(e, blank);
+            body.ondragleave = e => { if(!body.contains(e.relatedTarget)) blank.classList.remove('drag-over'); };
+            body.ondrop = e => handleImageNodeDropEvent(e, node.id, blank);
         }
     }
     if(node.type === 'prompt') {
@@ -13432,9 +13432,21 @@ function canResolvePort(id){
     // 只跳过“真正的孤儿连线”（端点节点已不存在）；节点存在但暂时没 DOM 的，portPoint 会用几何坐标兜底。
     return Boolean(nodes.find(x => x.id === id));
 }
+function connectionLinkClasses(c){
+    const classes = ['link'];
+    if(!selected.size) return classes;
+    const fromSel = selected.has(c.from);
+    const toSel = selected.has(c.to);
+    if(!fromSel && !toSel) return classes;
+    classes.push('link-flow');
+    // path 始终从 out → in；正向 dash 流向终点（入边），反向流向起点（出边）
+    if(fromSel && !toSel) classes.push('link-flow-reverse');
+    return classes;
+}
 function renderLinks(){
     linksEl.innerHTML = '';
     linkControlsEl.innerHTML = '';
+    linksEl.classList.toggle('has-selection', selected.size > 0);
     // 先批量读取所有端点坐标（portPoint 里有 getBoundingClientRect），再统一写入 DOM。
     // 否则“读一条 rect → append 一条线”交错进行，每次 append 都让布局失效，下一次读 rect 就触发一次
     // 全量强制重排（layout thrashing），连线一多拖动就掉帧。读写分离后每帧只强制重排一次。
@@ -13445,11 +13457,18 @@ function renderLinks(){
         if(!canResolvePort(c.from) || !canResolvePort(c.to)) return;
         segments.push({c, a:portPoint(c.from, 'out'), b:portPoint(c.to, 'in')});
     });
+    let activeFlowCount = 0;
     segments.forEach(({c, a, b}) => {
-        linksEl.appendChild(pathEl(a.x, a.y, b.x, b.y, 'link'));
+        const touchSelected = selected.size > 0 && (selected.has(c.from) || selected.has(c.to));
+        if(touchSelected){
+            activeFlowCount++;
+            linksEl.appendChild(pathEl(a.x, a.y, b.x, b.y, 'link link-flow-glow'));
+        }
+        linksEl.appendChild(pathEl(a.x, a.y, b.x, b.y, connectionLinkClasses(c).join(' ')));
         linkControlsEl.appendChild(linkDeleteButton(c, a, b));
         linksEl.appendChild(linkHitEl(a.x, a.y, b.x, b.y, c.id));
     });
+    linksEl.classList.toggle('links-reduce-motion', activeFlowCount > 28);
     if(tempLink){
         linksEl.appendChild(pathEl(tempLink.x1, tempLink.y1, tempLink.x2, tempLink.y2, 'link temp'));
     }

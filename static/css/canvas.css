@@ -190,6 +190,28 @@ body.canvas-board-pan * { cursor:grabbing !important; user-select:none !importan
 .link { stroke:var(--faint); stroke-width:2.5; fill:none; opacity:.82; pointer-events:none; }
 .link.temp { stroke:var(--strong); stroke-dasharray:6 6; }
 .link.knife-trail { stroke:#ef4444; stroke-width:2.4; stroke-dasharray:7 6; opacity:.88; filter:drop-shadow(0 0 6px rgba(239,68,68,.35)); }
+/* 选中节点时：关联连线高亮 + 沿路径流向节点的 dash 动画（参考 LibTV 连线光效） */
+.links.has-selection .link:not(.link-flow) { opacity:.28; }
+.link.link-flow-glow {
+    stroke:rgba(56,189,248,.32);
+    stroke-width:6;
+    opacity:1;
+    filter:drop-shadow(0 0 8px rgba(56,189,248,.42));
+}
+.link.link-flow {
+    stroke:#38bdf8;
+    stroke-width:2.6;
+    stroke-dasharray:10 14;
+    opacity:1;
+    filter:drop-shadow(0 0 5px rgba(56,189,248,.55));
+    animation:link-flow-forward 1.15s linear infinite;
+}
+.link.link-flow-reverse { animation-name:link-flow-reverse; }
+.links.links-reduce-motion .link.link-flow { animation:none; stroke-dasharray:none; opacity:.92; }
+@keyframes link-flow-forward { to { stroke-dashoffset:-24; } }
+@keyframes link-flow-reverse { to { stroke-dashoffset:24; } }
+body.theme-dark .link.link-flow { stroke:#7dd3fc; filter:drop-shadow(0 0 6px rgba(125,211,252,.5)); }
+body.theme-dark .link.link-flow-glow { stroke:rgba(125,211,252,.28); filter:drop-shadow(0 0 10px rgba(125,211,252,.38)); }
 .link-hit { stroke:transparent; stroke-width:18; fill:none; pointer-events:stroke; }
 .link-controls { position:absolute; inset:0; width:6000px; height:4000px; pointer-events:none; z-index:3; }
 .link-delete { position:absolute; width:22px; height:22px; border-radius:999px; display:flex; align-items:center; justify-content:center; transform:translate(-50%,-50%); color:#64748b; background:rgba(255,255,255,.94); border:1px solid #e2e8f0; box-shadow:0 8px 20px rgba(15,23,42,.12); opacity:0; pointer-events:none; transition:opacity .14s var(--ease), color .14s var(--ease), border-color .14s var(--ease), background .14s var(--ease); }
@@ -309,8 +331,9 @@ body.canvas-selecting .node .llm-bubble { pointer-events:none !important; }
 .node.sized.image-node img { flex:1; min-height:0; height:100%; max-height:none; }
 .node.sized.image-node video { width:100%; height:100%; object-fit:contain; }
 .image-caption { flex:0 0 auto; }
-.blank-image { height:190px; border:1px dashed #cbd5e1; border-radius:16px; background:#f8fafc; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:#94a3b8; cursor:pointer; transition:all .2s var(--ease); }
-.node.sized .blank-image { height:100%; min-height:72px; }
+.image-node:not(.has-image) .node-body { display:flex; align-items:center; justify-content:center; }
+.blank-image { flex:0 0 auto; width:auto; max-width:calc(100% - 8px); height:auto; min-height:0; padding:16px 22px; border:1px dashed #cbd5e1; border-radius:16px; background:#f8fafc; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:#94a3b8; cursor:pointer; transition:all .2s var(--ease); }
+.node.sized .blank-image { height:auto; min-height:0; align-self:center; }
 .blank-image:hover,.blank-image.drag-over { border-color:#111827; color:#111827; background:#fff; }
 .prompt-node { width:310px; }
 .prompt-node .node-body { overflow:hidden !important; }

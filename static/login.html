@@ -58,19 +58,44 @@
         }
         html.theme-dark .card { box-shadow: 0 20px 60px rgba(0,0,0,.35); }
         .title { font-size: 28px; font-weight: 700; letter-spacing: -.03em; text-align: center; }
-        label { display: block; font-size: 13px; color: var(--muted); margin: 18px 0 8px; }
+        label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin: 18px 0 8px; }
         label:first-of-type { margin-top: 28px; }
-        input {
+        .auth-input {
+            display: block;
             width: 100%;
+            height: 44px;
             border: 1px solid var(--border);
-            background: transparent;
+            background: rgba(0,0,0,.03);
             color: var(--text);
             border-radius: 12px;
-            padding: 12px 14px;
+            padding: 0 14px;
             outline: none;
             box-sizing: border-box;
+            font-size: 14px;
+            line-height: 1.4;
+            transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
         }
-        input:focus { border-color: var(--accent); }
+        html.theme-dark .auth-input {
+            background: rgba(255,255,255,.04);
+        }
+        .auth-input::placeholder {
+            color: var(--muted);
+            opacity: .72;
+        }
+        .auth-input:hover {
+            border-color: #c8c8c8;
+        }
+        html.theme-dark .auth-input:hover {
+            border-color: #3d4a5c;
+        }
+        .auth-input:focus {
+            border-color: var(--accent);
+            background: var(--card);
+            box-shadow: 0 0 0 3px rgba(17,17,17,.08);
+        }
+        html.theme-dark .auth-input:focus {
+            box-shadow: 0 0 0 3px rgba(255,255,255,.1);
+        }
         .btn {
             width: 100%;
             margin-top: 24px;
@@ -120,10 +145,10 @@
 
         <form id="auth-form">
             <label for="username">账号</label>
-            <input id="username" name="username" autocomplete="username" required placeholder="请输入账号">
+            <input id="username" class="auth-input" name="username" autocomplete="username" required placeholder="请输入账号">
 
             <label for="password">密码</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码">
+            <input id="password" class="auth-input" name="password" type="password" autocomplete="current-password" required placeholder="请输入密码">
 
             <button class="btn" id="submit-btn" type="submit">登录</button>
         </form>

@@ -18,6 +18,7 @@
     </script>
     <script src="/static/vendor/js/lucide.js?v=2026.06.22.1782120241"></script>
     <script src="/static/js/theme.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/js/auth.js?v=2026.06.22.1782182652"></script>
     <link rel="stylesheet" href="/static/css/theme.css?v=2026.06.22.1782120241">
     <link rel="stylesheet" href="/static/css/asset-manager.css?v=2026.06.22.1782120241">
 </head>
@@ -47,5 +48,6 @@
 
     <input id="assetUploadInput" type="file" accept="image/*,video/*,audio/*,.json,.zip,application/json,application/zip" multiple hidden>
     <script src="/static/js/asset-manager.js?v=2026.06.22.1782120241"></script>
+    <script>document.addEventListener('DOMContentLoaded',function(){window.StudioAuth&&window.StudioAuth.initPage({redirect:false});});</script>
 </body>
 </html>

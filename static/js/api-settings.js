@@ -3104,9 +3104,18 @@ async function initApiSettingsAuth(){
         if (!status.auth_required) return;
         const me = await window.StudioAuth.fetchMe();
         canManageProviders = me.can_manage_providers !== false;
-        if (!canManageProviders && statusEl) {
-            setStatus('只读模式：当前账号不可修改 API 配置');
+        if (!canManageProviders) {
+            const msg = '当前账号无权访问 API 设置';
+            if (window.top && window.top !== window.self) {
+                try { window.top.postMessage({ type: 'studio-forbidden-page' }, '*'); } catch (e) {}
+                window.top.location.href = '/';
+            } else {
+                alert(msg);
+                window.location.href = '/';
+            }
+            return;
         }
+        if (statusEl) setStatus('');
     } catch (e) {}
 }
 async function loadProviders(){

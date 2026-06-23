@@ -1388,7 +1388,11 @@ window.addEventListener('message', event => {
 });
 window.addEventListener('studio-lang-change', refreshLanguageView);
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    if (window.StudioAuth && window.StudioAuth.ensureOwnerAccess) {
+        const access = await window.StudioAuth.ensureOwnerAccess({ redirect: true, fallback: '/', alert: false });
+        if (!access.ok) return;
+    }
     refreshIcons();
     if(window.StudioI18n) StudioI18n.apply();
     loadList();

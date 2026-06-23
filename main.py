@@ -14250,7 +14250,9 @@ async def ms_generate(req: MsGenerateRequest):
 # --- 本地 ComfyUI 生图 ---
 
 @app.post("/api/generate")
-def generate(req: GenerateRequest):
+def generate(req: GenerateRequest, request: Request):
+    from auth.tenant import assert_owner, scope_from_request
+    assert_owner(scope_from_request(request), "仅主账号可使用本地生图功能")
     global NEXT_TASK_ID
     current_task = None
     target_backend = None
@@ -14889,7 +14891,9 @@ def get_comfyui_instances():
     return {"instances": COMFYUI_INSTANCES}
 
 @app.put("/api/comfyui/instances")
-def save_comfyui_instances(payload: ComfyInstancesPayload):
+def save_comfyui_instances(payload: ComfyInstancesPayload, request: Request):
+    from auth.tenant import assert_owner, scope_from_request
+    assert_owner(scope_from_request(request), "仅主账号可修改工作流设置")
     # 宽容校验：去前后空白、去 http(s):// 前缀、去尾部斜杠；要求形如 host:port
     cleaned = []
     for item in payload.instances:
@@ -14975,7 +14979,9 @@ def get_workflow(name: str):
     return {"name": name, "workflow": workflow, "config": cfg, "builtin": is_builtin_workflow(name)}
 
 @app.post("/api/workflows")
-def upload_workflow(payload: WorkflowUploadRequest):
+def upload_workflow(payload: WorkflowUploadRequest, request: Request):
+    from auth.tenant import assert_owner, scope_from_request
+    assert_owner(scope_from_request(request), "仅主账号可管理工作流")
     name = os.path.basename(payload.name.strip())
     if not name.endswith(".json"):
         name = name + ".json"
@@ -14996,7 +15002,9 @@ def upload_workflow(payload: WorkflowUploadRequest):
     return {"name": stored_name}
 
 @app.put("/api/workflows/{name:path}/config")
-def save_workflow_config(name: str, payload: WorkflowConfig):
+def save_workflow_config(name: str, payload: WorkflowConfig, request: Request):
+    from auth.tenant import assert_owner, scope_from_request
+    assert_owner(scope_from_request(request), "仅主账号可管理工作流")
     if not WORKFLOW_NAME_RE.match(name):
         raise HTTPException(status_code=400, detail="Invalid workflow name")
     workflow_path = workflow_path_from_name(name)
@@ -15008,7 +15016,9 @@ def save_workflow_config(name: str, payload: WorkflowConfig):
     return {"config": payload.dict()}
 
 @app.delete("/api/workflows/{name:path}")
-def delete_workflow(name: str):
+def delete_workflow(name: str, request: Request):
+    from auth.tenant import assert_owner, scope_from_request
+    assert_owner(scope_from_request(request), "仅主账号可管理工作流")
     if not WORKFLOW_NAME_RE.match(name):
         raise HTTPException(status_code=400, detail="Invalid workflow name")
     if is_builtin_workflow(name):

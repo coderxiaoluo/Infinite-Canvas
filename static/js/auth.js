@@ -804,6 +804,78 @@
 
 
 
+    async function ensureOwnerAccess(options) {
+
+        options = options || {};
+
+        var result = await ensureAuth({
+
+            redirect: options.redirect !== false,
+
+            next: options.next || (window.location.pathname + window.location.search),
+
+        });
+
+        if (!result.ok) return result;
+
+        var status = await getStatus(false);
+
+        if (!status.auth_required) return { ok: true, is_owner: true, user: result.user, required: false };
+
+        var me;
+
+        try { me = await fetchMe(); } catch (e) { me = {}; }
+
+        var resolved = resolveAuthPayload(me);
+
+        if (resolved.is_owner) return { ok: true, is_owner: true, user: resolved.user || result.user, required: true };
+
+        var msg = options.message || '当前账号无权访问此页面';
+
+        var fallback = options.fallback || '/';
+
+        if (options.redirect !== false) {
+
+            try {
+
+                if (window.top && window.top !== window.self) {
+
+                    window.top.postMessage({ type: 'studio-forbidden-page', page: window.location.pathname }, '*');
+
+                }
+
+            } catch (e) {}
+
+            try {
+
+                if (window.top && window.top !== window.self) window.top.location.href = fallback;
+
+                else { alert(msg); window.location.href = fallback; }
+
+            } catch (e2) {
+
+                alert(msg);
+
+                window.location.href = fallback;
+
+            }
+
+        } else if (options.alert !== false) {
+
+            alert(msg);
+
+        }
+
+        return { ok: false, forbidden: true, is_owner: false, user: resolved.user, required: true };
+
+    }
+
+
+
+    var OWNER_ONLY_PAGE_IDS = ['zimage', 'enhance', 'klein', 'angle', 'api-settings', 'comfyui-settings'];
+
+
+
     window.StudioAuth = {
 
         getAccessToken: getAccessToken,
@@ -813,6 +885,8 @@
         getStatus: getStatus,
 
         ensureAuth: ensureAuth,
+
+        ensureOwnerAccess: ensureOwnerAccess,
 
         initPage: initPage,
 
@@ -833,6 +907,10 @@
         renderUserBadge: renderUserBadge,
 
         patchFetch: patchFetch,
+
+        userIsOwner: userIsOwner,
+
+        OWNER_ONLY_PAGE_IDS: OWNER_ONLY_PAGE_IDS,
 
     };
 

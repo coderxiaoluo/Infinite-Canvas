@@ -1052,6 +1052,7 @@ function syncSelectionUi(){
         });
     });
     syncRunButtonState();
+    scheduleConnectionLayerRefresh();
 }
 function isNodeSelected(id){
     return selectedId === id || selectedIds.includes(id);
@@ -5642,6 +5643,15 @@ function shellPoint(event){
     const rect = shell.getBoundingClientRect();
     return {x:event.clientX - rect.left, y:event.clientY - rect.top};
 }
+function connectionSelectionMeta(item){
+    const sel = selectedNodeIds();
+    if(!sel.length) return {active:false, reverse:false};
+    const selSet = new Set(sel);
+    const fromSel = selSet.has(item.from);
+    const toSel = selSet.has(item.toId) || item.targets.some(t => selSet.has(t));
+    if(!fromSel && !toSel) return {active:false, reverse:false};
+    return {active:true, reverse:fromSel && !toSel};
+}
 function renderConnections(){
     const conns = (canvas?.connections || []).map((conn, index) => ({...conn, index})).filter(c => nodes.some(n => n.id === c.from) && nodes.some(n => n.id === c.to));
     const cascadeKeys = cascadeConnectionKeys();
@@ -5707,9 +5717,19 @@ function renderConnections(){
         const color = isCascade ? '#16a34a' : isHistory ? 'rgba(100,116,139,0.46)' : kind === 'input' ? 'rgba(100,116,139,0.62)' : 'rgba(148,163,184,0.62)';
         const opacity = isPendingLine ? '.82' : '1';
         const width = kind === 'input' ? '1.9' : '1.6';
-        return `<path class="${cls}" d="${curve}" stroke="${color}" stroke-width="${width}" fill="none" opacity="${opacity}"></path><path class="conn-hit" data-conn-index="${dataIndex}" d="${curve}" stroke="transparent" stroke-width="14" fill="none"></path><circle cx="${tx}" cy="${ty}" r="3.5" fill="${color}" opacity=".66"></circle><g class="conn-cut" data-conn-index="${dataIndex}" transform="translate(${mx} ${my})"><circle r="8" fill="var(--card)" stroke="${color}" stroke-width="1.4"></circle><path d="M-3 -3 L3 3 M3 -3 L-3 3" stroke="${color}" stroke-width="1.5" stroke-linecap="round"></path></g>`;
+        const selMeta = connectionSelectionMeta(item);
+        const selGlow = selMeta.active ? `<path class="conn-selection-glow" d="${curve}" fill="none"></path>` : '';
+        const selFlow = selMeta.active ? `<path class="conn-selection-flow ${selMeta.reverse ? 'conn-selection-reverse' : ''}" d="${curve}" fill="none"></path>` : '';
+        return `${selGlow}${selFlow}<path class="${cls}${selMeta.active ? ' conn-dimmed' : ''}" d="${curve}" stroke="${color}" stroke-width="${width}" fill="none" opacity="${opacity}"></path><path class="conn-hit" data-conn-index="${dataIndex}" d="${curve}" stroke="transparent" stroke-width="14" fill="none"></path><circle cx="${tx}" cy="${ty}" r="3.5" fill="${color}" opacity=".66"></circle><g class="conn-cut" data-conn-index="${dataIndex}" transform="translate(${mx} ${my})"><circle r="8" fill="var(--card)" stroke="${color}" stroke-width="1.4"></circle><path d="M-3 -3 L3 3 M3 -3 L-3 3" stroke="${color}" stroke-width="1.5" stroke-linecap="round"></path></g>`;
     }).join('');
-    return `<svg class="connection-layer ${reduceMotion ? 'conn-reduce-motion' : ''}" width="6000" height="4000" viewBox="0 0 6000 4000" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
+    const selectionActiveCount = items.filter(item => connectionSelectionMeta(item).active).length;
+    const layerCls = [
+        'connection-layer',
+        reduceMotion ? 'conn-reduce-motion' : '',
+        selectedNodeIds().length ? 'has-selection' : '',
+        selectionActiveCount > 28 ? 'conn-selection-reduce-motion' : ''
+    ].filter(Boolean).join(' ');
+    return `<svg class="${layerCls}" width="6000" height="4000" viewBox="0 0 6000 4000" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
 }
 function refreshConnectionLayer(){
     connectionLayerRaf = 0;
@@ -7799,7 +7819,7 @@ function bindNodeEvents(){
             capturePendingUndo();
         });
         const beginNodeDrag = e => {
-            if(e.button !== 0 || e.target.closest('.mini-x, .smart-node-floating-menu, .node-resize-handle, .thumb-item, .node-port, select, input, button')) return;
+            if(e.button !== 0 || e.target.closest('.mini-x, .smart-node-floating-menu, .node-resize-handle, .thumb-item, .node-port, .node-drop, select, input, button')) return;
             if(e.target.closest('.prompt-node-pill, textarea:not(.prompt-node-text)')) return;
             e.preventDefault(); e.stopPropagation();
             window.getSelection?.()?.removeAllRanges?.();

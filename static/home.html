@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/images/logo.png" type="image/png">
+    <title>AI CANVAS</title>
+    <script>
+        (function(){
+            try {
+                var theme = localStorage.getItem('studio_theme') || localStorage.getItem('canvas_theme') || 'light';
+                if(theme === 'dark') {
+                    document.documentElement.classList.add('studio-theme-dark');
+                    document.documentElement.classList.add('theme-dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
+    <script src="/static/js/theme.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/js/i18n.js?v=2026.06.22.1782120241"></script>
+    <script src="/static/js/auth.js?v=2026.06.22.1782182652"></script>
+    <style>
+        @import url('/static/vendor/css/fonts.css?v=2026.06.22.1782120241');
+        :root {
+            --bg: #f5f5f7;
+            --card: #ffffff;
+            --card-hover: #fafafa;
+            --text: #111;
+            --muted: #666;
+            --border: rgba(0,0,0,.08);
+            --accent: #111;
+        }
+        html.theme-dark, body.theme-dark {
+            --bg: #050508;
+            --card: #12121a;
+            --card-hover: #181822;
+            --text: #f0f0f5;
+            --muted: #8b8b9a;
+            --border: rgba(255,255,255,.08);
+            --accent: #f0f0f5;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .home-wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 28px 48px;
+        }
+        .home-hero {
+            display: grid;
+            grid-template-columns: 1fr 1.15fr 1fr;
+            gap: 14px;
+            align-items: stretch;
+            margin-bottom: 40px;
+        }
+        .hero-card {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            min-height: 180px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            cursor: pointer;
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s;
+        }
+        .hero-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255,255,255,.14);
+            box-shadow: 0 12px 40px rgba(0,0,0,.35);
+        }
+        .hero-card.is-center {
+            min-height: 220px;
+            transform: scale(1.02);
+            z-index: 1;
+        }
+        .hero-card.is-center:hover { transform: scale(1.02) translateY(-3px); }
+        .hero-card-bg {
+            position: absolute;
+            inset: 0;
+            opacity: .85;
+        }
+        .hero-card-bg.gpt { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+        .hero-card-bg.canvas { background: linear-gradient(135deg, #1a1025 0%, #2d1b4e 40%, #4a1942 100%); }
+        .hero-card-bg.online { background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%); }
+        .hero-card-body {
+            position: relative;
+            z-index: 1;
+            padding: 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .hero-tag {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.65);
+            margin-bottom: 8px;
+        }
+        .hero-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.25;
+        }
+        .hero-card:not(.is-center) .hero-title { font-size: 15px; }
+        .hero-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: -24px;
+            margin-bottom: 36px;
+        }
+        .hero-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--muted);
+            opacity: .4;
+        }
+        .hero-dot.active { opacity: 1; background: var(--text); }
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .section-head h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .section-link {
+            font-size: 13px;
+            color: var(--muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: color .2s;
+        }
+        .section-link:hover { color: var(--text); }
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+        .quick-card {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--card);
+            padding: 20px 16px;
+            cursor: pointer;
+            transition: background .2s, border-color .2s, transform .2s;
+            text-align: left;
+        }
+        .quick-card:hover {
+            background: var(--card-hover);
+            border-color: rgba(255,255,255,.12);
+            transform: translateY(-2px);
+        }
+        .quick-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(255,255,255,.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+        .quick-icon svg { width: 18px; height: 18px; }
+        .quick-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .quick-desc {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        .recent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+        }
+        .recent-card {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--card);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform .2s, border-color .2s;
+        }
+        .recent-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,.12);
+        }
+        .recent-thumb {
+            aspect-ratio: 16/10;
+            background: linear-gradient(145deg, #1a1a24, #252532);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 28px;
+        }
+        .recent-meta {
+            padding: 12px 14px;
+        }
+        .recent-title {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .recent-sub {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        .create-card {
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            color: var(--muted);
+            transition: border-color .2s, color .2s;
+        }
+        .create-card:hover {
+            border-color: rgba(255,255,255,.2);
+            color: var(--text);
+        }
+        .create-plus {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 300;
+        }
+        .owner-section { display: none; }
+        .owner-section.is-visible { display: block; }
+        @media (max-width: 768px) {
+            .home-hero { grid-template-columns: 1fr; }
+            .hero-card.is-center { transform: none; min-height: 180px; }
+            .home-wrap { padding: 20px 16px 32px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="home-wrap">
+        <section class="home-hero" id="heroSection">
+            <div class="hero-card" data-page="gpt-chat">
+                <div class="hero-card-bg gpt"></div>
+                <div class="hero-card-body">
+                    <div class="hero-tag" data-i18n="nav.gpt">GPT 对话</div>
+                    <div class="hero-title" data-i18n="home.heroGpt">智能对话 · 创意助手</div>
+                </div>
+            </div>
+            <div class="hero-card is-center" data-page="canvas">
+                <div class="hero-card-bg canvas"></div>
+                <div class="hero-card-body">
+                    <div class="hero-tag" data-i18n="nav.canvas">无限画布</div>
+                    <div class="hero-title" data-i18n="home.heroCanvas">可视化工作流 · 节点编排</div>
+                </div>
+            </div>
+            <div class="hero-card" data-page="online">
+                <div class="hero-card-bg online"></div>
+                <div class="hero-card-body">
+                    <div class="hero-tag" data-i18n="nav.online">在线生图</div>
+                    <div class="hero-title" data-i18n="home.heroOnline">云端模型 · 即开即用</div>
+                </div>
+            </div>
+        </section>
+        <div class="hero-dots" aria-hidden="true">
+            <span class="hero-dot"></span>
+            <span class="hero-dot active"></span>
+            <span class="hero-dot"></span>
+        </div>
+
+        <section>
+            <div class="section-head">
+                <h2 data-i18n="home.quickStart">快捷入口</h2>
+            </div>
+            <div class="quick-grid" id="quickGrid"></div>
+        </section>
+
+        <section class="owner-section" id="ownerLocalSection">
+            <div class="section-head">
+                <h2 data-i18n="nav.localTools">本地功能</h2>
+            </div>
+            <div class="quick-grid" id="localQuickGrid"></div>
+        </section>
+
+        <section>
+            <div class="section-head">
+                <h2 data-i18n="home.recentCanvases">最近画布</h2>
+                <button class="section-link" type="button" onclick="goPage('canvas')" data-i18n="home.viewAll">全部项目 ›</button>
+            </div>
+            <div class="recent-grid" id="recentGrid"></div>
+        </section>
+    </div>
+
+    <script>
+        var QUICK_ITEMS = [
+            { id: 'online', labelKey: 'nav.online', descKey: 'home.descOnline', icon: 'globe' },
+            { id: 'gpt-chat', labelKey: 'nav.gpt', descKey: 'home.descGpt', icon: 'chat' },
+            { id: 'canvas', labelKey: 'nav.canvas', descKey: 'home.descCanvas', icon: 'grid' },
+            { id: 'asset-manager', labelKey: 'nav.assetManager', descKey: 'home.descAssets', icon: 'folder' }
+        ];
+        var LOCAL_ITEMS = [
+            { id: 'zimage', labelKey: 'nav.textToImage', descKey: 'home.descZimage', icon: 'image' },
+            { id: 'enhance', labelKey: 'nav.enhance', descKey: 'home.descEnhance', icon: 'bolt' },
+            { id: 'klein', labelKey: 'nav.imageEdit', descKey: 'home.descEdit', icon: 'edit' },
+            { id: 'angle', labelKey: 'nav.angle', descKey: 'home.descAngle', icon: 'box' }
+        ];
+        var ICONS = {
+            globe: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+            chat: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+            grid: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+            folder: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M4 19.5V6.8A2.8 2.8 0 0 1 6.8 4h10.4A2.8 2.8 0 0 1 20 6.8v12.7"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>',
+            image: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.587-1.587a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+            bolt: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
+            edit: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>',
+            box: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>'
+        };
+
+        function t(key, fallback) {
+            if (window.StudioI18n && typeof window.StudioI18n.t === 'function') {
+                var v = window.StudioI18n.t(key);
+                if (v && v !== key) return v;
+            }
+            return fallback || key;
+        }
+
+        function goPage(id) {
+            if (window.parent && typeof window.parent.switchUI === 'function') {
+                var el = window.parent.document.querySelector('[data-page="' + id + '"]');
+                window.parent.switchUI(el, id);
+            }
+        }
+
+        function openCanvas(c) {
+            var enc = encodeURIComponent(c.id);
+            var project = encodeURIComponent(c.project || '');
+            var url = (c.kind === 'smart')
+                ? '/static/smart-canvas.html?id=' + enc + '&project=' + project
+                : '/static/canvas.html?id=' + enc + '&project=' + project;
+            window.location.href = url;
+        }
+
+        function renderQuickGrid(container, items) {
+            container.innerHTML = items.map(function(item) {
+                return '<button class="quick-card" type="button" data-page="' + item.id + '">' +
+                    '<div class="quick-icon">' + (ICONS[item.icon] || '') + '</div>' +
+                    '<div class="quick-label">' + t(item.labelKey, item.id) + '</div>' +
+                    '<div class="quick-desc">' + t(item.descKey, '') + '</div>' +
+                '</button>';
+            }).join('');
+            container.querySelectorAll('[data-page]').forEach(function(el) {
+                el.addEventListener('click', function() { goPage(el.getAttribute('data-page')); });
+            });
+        }
+
+        function formatTime(ts) {
+            if (!ts) return '';
+            var d = new Date(Number(ts));
+            if (isNaN(d.getTime())) return '';
+            var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+
+        async function loadRecent() {
+            var grid = document.getElementById('recentGrid');
+            if (!grid) return;
+            try {
+                var res = await fetch('/api/canvases');
+                var data = await res.json();
+                var list = (data.canvases || []).slice(0, 7);
+                var html = '<button class="create-card" type="button" id="createCanvasBtn">' +
+                    '<div class="create-plus">+</div>' +
+                    '<span>' + t('home.startCreate', '开始创作') + '</span></button>';
+                list.forEach(function(c) {
+                    var kindLabel = c.kind === 'smart' ? t('home.smartCanvas', '智能画布') : t('home.normalCanvas', '普通画布');
+                    var nodes = c.node_count != null ? c.node_count + ' ' + t('home.nodes', '节点') : '';
+                    html += '<div class="recent-card" data-canvas-id="' + c.id + '">' +
+                        '<div class="recent-thumb">◇</div>' +
+                        '<div class="recent-meta">' +
+                        '<div class="recent-title">' + (c.title || t('home.untitled', '未命名画布')) + '</div>' +
+                        '<div class="recent-sub">' + kindLabel + (nodes ? ' · ' + nodes : '') + ' · ' + formatTime(c.updated_at || c.created_at) + '</div>' +
+                        '</div></div>';
+                });
+                grid.innerHTML = html;
+                document.getElementById('createCanvasBtn').addEventListener('click', function() { goPage('canvas'); });
+                grid.querySelectorAll('.recent-card').forEach(function(el) {
+                    el.addEventListener('click', function() {
+                        var id = el.getAttribute('data-canvas-id');
+                        var c = list.find(function(x) { return x.id === id; });
+                        if (c) openCanvas(c);
+                    });
+                });
+            } catch (e) {
+                grid.innerHTML = '<button class="create-card" type="button" onclick="goPage(\'canvas\')"><div class="create-plus">+</div><span>' + t('home.startCreate', '开始创作') + '</span></button>';
+            }
+        }
+
+        function applyOwnerVisibility() {
+            var cached = null;
+            try { cached = JSON.parse(localStorage.getItem('ic_user_cache') || 'null'); } catch(e) {}
+            var isOwner = !cached || cached.account_type === 'owner' || cached.role === 'owner';
+            var sec = document.getElementById('ownerLocalSection');
+            if (sec && isOwner) {
+                sec.classList.add('is-visible');
+                renderQuickGrid(document.getElementById('localQuickGrid'), LOCAL_ITEMS);
+            }
+        }
+
+        document.getElementById('heroSection').querySelectorAll('.hero-card').forEach(function(el) {
+            el.addEventListener('click', function() { goPage(el.getAttribute('data-page')); });
+        });
+
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'studio-theme') {
+                document.documentElement.classList.toggle('theme-dark', e.data.theme === 'dark');
+                document.documentElement.classList.toggle('studio-theme-dark', e.data.theme === 'dark');
+            }
+            if (e.data && e.data.type === 'studio-lang' && window.StudioI18n) {
+                window.StudioI18n.apply();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.StudioI18n) window.StudioI18n.apply();
+            renderQuickGrid(document.getElementById('quickGrid'), QUICK_ITEMS);
+            applyOwnerVisibility();
+            loadRecent();
+            if (window.StudioAuth) {
+                window.StudioAuth.initPage({ redirect: false });
+            }
+        });
+    </script>
+</body>
+</html>
