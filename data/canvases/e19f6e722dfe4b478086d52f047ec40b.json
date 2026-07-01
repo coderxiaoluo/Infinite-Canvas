@@ -1,0 +1,45 @@
+{
+  "id": "e19f6e722dfe4b478086d52f047ec40b",
+  "title": "未命名画布",
+  "icon": "layers",
+  "kind": "classic",
+  "owner": "",
+  "color": "",
+  "pinned": false,
+  "project": "默认项目",
+  "created_at": 1782444032053,
+  "updated_at": 1782444077842,
+  "nodes": [
+    {
+      "id": "image_m9ho2t2",
+      "type": "image",
+      "x": 902,
+      "y": 231,
+      "url": "",
+      "images": [],
+      "caption": "",
+      "filename": "",
+      "apiProvider": "",
+      "model": "",
+      "ratio": "wide",
+      "resolution": "1k",
+      "quality": "auto",
+      "count": 1,
+      "customWidth": "",
+      "customHeight": "",
+      "customRatioWidth": "",
+      "customRatioHeight": "",
+      "runStatus": "idle",
+      "runError": "",
+      "generatedImages": []
+    }
+  ],
+  "connections": [],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  },
+  "logs": [],
+  "settings": {}
+}

@@ -1,0 +1,88 @@
+{
+  "id": "f1731e3da6da4c54aeae72688947b341",
+  "title": "你是谁",
+  "created_at": 1782200430266,
+  "updated_at": 1782200568334,
+  "messages": [
+    {
+      "id": "d29df47a6c1e454db1fce6bf5c8aa724",
+      "role": "user",
+      "content": "你是谁",
+      "created_at": 1782200430267,
+      "attachments": [],
+      "mode": "agent"
+    },
+    {
+      "id": "4354ab6d0a6d40a78b24a940b806988c",
+      "role": "assistant",
+      "content": "我是 Agnes-2.0-Flash，由 Sapiens AI 开发。",
+      "created_at": 1782200448562,
+      "model": "agnes-2.0-flash",
+      "raw_usage": {
+        "completion_tokens": 19,
+        "prompt_tokens": 260,
+        "total_tokens": 279
+      },
+      "agent_action": "chat"
+    },
+    {
+      "id": "c664ab964cdc48528252ab48e7bae4b1",
+      "role": "user",
+      "content": "你是谁",
+      "created_at": 1782200469818,
+      "attachments": [],
+      "mode": "agent"
+    },
+    {
+      "id": "314f54b054a54348bdb5982dd0c13f2b",
+      "role": "assistant",
+      "content": "我是 Agnes-2.0-Flash，由 Sapiens AI 开发。",
+      "created_at": 1782200501115,
+      "model": "agnes-2.0-flash",
+      "raw_usage": {
+        "completion_tokens": 19,
+        "prompt_tokens": 289,
+        "total_tokens": 308
+      },
+      "agent_action": "chat"
+    },
+    {
+      "id": "eac09363850b4071b2b298238400db17",
+      "role": "user",
+      "content": "生成奶龙图片",
+      "created_at": 1782200527867,
+      "attachments": [],
+      "mode": "agent"
+    },
+    {
+      "id": "a83151fc7a72479bb32c3fe4b8786244",
+      "role": "assistant",
+      "type": "image",
+      "content": "一只可爱的卡通奶龙形象，黄色身体，圆润造型，大眼睛，表情呆萌可爱，高清画质，3D渲染风格",
+      "image_url": "/assets/output/chat_ff6c31e88a.png",
+      "image_urls": [
+        "/assets/output/chat_ff6c31e88a.png"
+      ],
+      "created_at": 1782200568334,
+      "model": "agnes-image-2.1-flash",
+      "provider": "agnes-ai",
+      "size": "1024x1024",
+      "image_count": 1,
+      "prompts": [
+        "一只可爱的卡通奶龙形象，黄色身体，圆润造型，大眼睛，表情呆萌可爱，高清画质，3D渲染风格"
+      ],
+      "agent_action": "generate_image",
+      "agent_reply": "正在为您生成奶龙图片...",
+      "used_references": [],
+      "raw_usage": {
+        "total_tokens": 0,
+        "input_tokens": 0,
+        "input_tokens_details": {
+          "image_tokens": 0,
+          "text_tokens": 0
+        },
+        "output_tokens": 0
+      }
+    }
+  ]
+}

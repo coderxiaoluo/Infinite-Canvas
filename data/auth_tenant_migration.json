@@ -1,0 +1,11 @@
+{
+  "complete": true,
+  "tenant_id": "db16dd0a-f145-4fd1-a8df-7c2b2ff0008d",
+  "user_id": "732aee8f-4a3d-4c98-bcf6-524d53962a33",
+  "username": "admin",
+  "canvases_updated": 0,
+  "providers_migrated": true,
+  "projects_migrated": true,
+  "asset_library_migrated": true,
+  "conversation_dirs_moved": 1
+}

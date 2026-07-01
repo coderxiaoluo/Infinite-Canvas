@@ -1,0 +1,24 @@
+[
+    {
+        "prompt": "奶龙",
+        "images": [
+            "/assets/output/online_3ecc154f1c.png"
+        ],
+        "timestamp": 1782208674.1960554,
+        "type": "online",
+        "model": "Tongyi-MAI/Z-Image-Turbo",
+        "provider_id": "modelscope",
+        "provider_name": "ModelScope",
+        "task_id": "211216aa-5acf-4d50-ad40-6dc4a05013a6",
+        "request_id": null,
+        "params": {
+            "provider_id": "modelscope",
+            "model": "Tongyi-MAI/Z-Image-Turbo",
+            "size": "1024x1024",
+            "quality": "auto",
+            "n": 1,
+            "reference_images": []
+        },
+        "raw_usage": null
+    }
+]

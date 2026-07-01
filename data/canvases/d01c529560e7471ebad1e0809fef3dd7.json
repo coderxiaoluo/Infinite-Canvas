@@ -1,0 +1,75 @@
+{
+  "id": "d01c529560e7471ebad1e0809fef3dd7",
+  "title": "未命名画布",
+  "icon": "layers",
+  "kind": "classic",
+  "owner": "",
+  "color": "",
+  "pinned": false,
+  "project": "默认项目",
+  "created_at": 1782811742969,
+  "updated_at": 1782811809638,
+  "nodes": [
+    {
+      "id": "prompt_arecfq6",
+      "type": "prompt",
+      "x": 443,
+      "y": 372,
+      "text": "",
+      "apiProvider": "",
+      "model": "",
+      "manualModel": "",
+      "ratio": "wide",
+      "resolution": "1k",
+      "quality": "auto",
+      "count": 1,
+      "customWidth": "",
+      "customHeight": "",
+      "customRatioWidth": "",
+      "customRatioHeight": "",
+      "runStatus": "idle",
+      "runError": "",
+      "generatedImages": []
+    },
+    {
+      "id": "image_zls1gil",
+      "type": "image",
+      "x": 1073,
+      "y": 394,
+      "url": "",
+      "images": [],
+      "caption": "",
+      "filename": "",
+      "apiProvider": "",
+      "model": "",
+      "manualModel": "",
+      "ratio": "wide",
+      "resolution": "1k",
+      "quality": "auto",
+      "count": 1,
+      "customWidth": "",
+      "customHeight": "",
+      "customRatioWidth": "",
+      "customRatioHeight": "",
+      "runStatus": "idle",
+      "runError": "",
+      "generatedImages": []
+    }
+  ],
+  "connections": [
+    {
+      "id": "e_4jj0jnv",
+      "from": "prompt_arecfq6",
+      "to": "image_zls1gil",
+      "source_handle": "prompt_arecfq6-out",
+      "target_handle": "image_zls1gil-in"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  },
+  "logs": [],
+  "settings": {}
+}

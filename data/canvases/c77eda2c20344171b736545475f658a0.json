@@ -1,0 +1,223 @@
+{
+  "id": "c77eda2c20344171b736545475f658a0",
+  "title": "画布 16:02",
+  "icon": "🧩",
+  "kind": "classic",
+  "owner": "",
+  "color": "",
+  "pinned": false,
+  "project": "default",
+  "created_at": 1782201739789,
+  "updated_at": 1782444030113,
+  "nodes": [
+    {
+      "id": "img_2f3c52eb7ee7d8_1782201744375",
+      "type": "image",
+      "x": 281.3404901607473,
+      "y": 32.410150891632384,
+      "url": "/assets/input/ai_ref_6ff14aeddae5.png",
+      "name": "【哲风壁纸】天空-孤独-寂静.png",
+      "mediaKind": "image",
+      "_naturalSizeLoading": false,
+      "natural_w": 3072,
+      "natural_h": 2048
+    },
+    {
+      "id": "prompt_792ac22c1113f_1782201746669",
+      "type": "prompt",
+      "x": 273.42502888215114,
+      "y": 600.4778719697158,
+      "text": ""
+    },
+    {
+      "id": "vid_3d73a4b5520c48_1782201752037",
+      "type": "video",
+      "x": 728.8282685806645,
+      "y": 242.37412396062575,
+      "apiProvider": "volcengine",
+      "model": "doubao-seedance-1-0-lite-i2v-250428",
+      "duration": 5,
+      "aspectRatio": "16:9",
+      "resolution": "",
+      "enhancePrompt": false,
+      "enableUpsample": false,
+      "watermark": false,
+      "cameraFixed": false,
+      "generateAudio": false,
+      "useFrameRoles": false,
+      "multimodal": false,
+      "tempShLinks": [],
+      "inputs": [
+        "prompt_792ac22c1113f_1782201746669",
+        "img_2f3c52eb7ee7d8_1782201744375"
+      ]
+    },
+    {
+      "id": "img_d943705e53a8f8_1782202861940",
+      "type": "image",
+      "x": 1247.7936750100143,
+      "y": 345.9226281287554,
+      "url": "",
+      "name": "空白图片"
+    },
+    {
+      "id": "out_73e4746ee0565_1782205334102",
+      "type": "output",
+      "x": 1477.970284525174,
+      "y": -27.069524103364984,
+      "images": []
+    },
+    {
+      "id": "ltxdir_728d2e767a11a_1782205434999",
+      "type": "ltxDirector",
+      "x": 1536.1012970273111,
+      "y": 218.12445483550073,
+      "w": 1000,
+      "h": 800,
+      "globalPrompt": "",
+      "durationFrames": 120,
+      "durationSeconds": 5,
+      "frameRate": 24,
+      "customWidth": 0,
+      "customHeight": 0,
+      "displayMode": "seconds",
+      "useCustomAudio": false,
+      "imgCompression": 18,
+      "epsilon": 0.001,
+      "divisibleBy": 32,
+      "noiseSeed": 12,
+      "ltxTimelineData": "{\"segments\":[{\"id\":\"ltxseg_11a8b83212009_1782205435002\",\"start\":0,\"length\":120,\"prompt\":\"\",\"type\":\"text\"}],\"audioSegments\":[]}",
+      "ltxLocalPrompts": "",
+      "ltxSegmentLengths": "120",
+      "ltxGuideStrength": "",
+      "ltxSegments": [],
+      "ltxSelectedSegId": "",
+      "inputs": []
+    },
+    {
+      "id": "ltxdir_0ebf1be5c4dd78_1782205621197",
+      "type": "ltxDirector",
+      "x": -1121.0911970292366,
+      "y": 749.4542382944746,
+      "w": 1000,
+      "h": 800,
+      "globalPrompt": "",
+      "durationFrames": 120,
+      "durationSeconds": 5,
+      "frameRate": 24,
+      "customWidth": 0,
+      "customHeight": 0,
+      "displayMode": "seconds",
+      "useCustomAudio": false,
+      "imgCompression": 18,
+      "epsilon": 0.001,
+      "divisibleBy": 32,
+      "noiseSeed": 12,
+      "ltxTimelineData": "{\"segments\":[{\"id\":\"ltxseg_57ee23fd2009c_1782205621201\",\"start\":0,\"length\":116,\"prompt\":\"\",\"type\":\"text\"}],\"audioSegments\":[]}",
+      "ltxLocalPrompts": "",
+      "ltxSegmentLengths": "120",
+      "ltxGuideStrength": "",
+      "ltxSegments": [],
+      "ltxSelectedSegId": "",
+      "inputs": []
+    },
+    {
+      "id": "img_e1117dc998a2d8_1782291139787",
+      "type": "image",
+      "x": 173.66828537977972,
+      "y": 952.4750926160075,
+      "url": "/assets/input/ai_ref_4c41afbe8b53.png",
+      "name": "【哲风壁纸】天空-孤独-寂静.png",
+      "mediaKind": "image",
+      "_naturalSizeLoading": false,
+      "natural_w": 3072,
+      "natural_h": 2048
+    },
+    {
+      "id": "gen_0ed68a26b01718_1782291154180",
+      "type": "generator",
+      "x": 750.7995623045801,
+      "y": 977.1629172713863,
+      "apiProvider": "volcengine",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "ratio": "square",
+      "resolution": "1k",
+      "customRatio": "",
+      "customSize": "",
+      "customRatioWidth": "",
+      "customRatioHeight": "",
+      "customWidth": "",
+      "customHeight": "",
+      "inputs": [
+        "img_e1117dc998a2d8_1782291139787"
+      ]
+    },
+    {
+      "id": "out_e247183dff86a_1782291181539",
+      "type": "output",
+      "x": 1371.8126279621208,
+      "y": 1255.4702691695195,
+      "images": [],
+      "_pending": []
+    }
+  ],
+  "connections": [
+    {
+      "id": "c_968a77dcbab15_1782205223196",
+      "from": "prompt_792ac22c1113f_1782201746669",
+      "to": "vid_3d73a4b5520c48_1782201752037"
+    },
+    {
+      "id": "c_be50031dcbefb_1782205289692",
+      "from": "img_2f3c52eb7ee7d8_1782201744375",
+      "to": "vid_3d73a4b5520c48_1782201752037"
+    },
+    {
+      "id": "c_924e6ebff4fe1_1782205334102",
+      "from": "vid_3d73a4b5520c48_1782201752037",
+      "to": "out_73e4746ee0565_1782205334102"
+    },
+    {
+      "id": "c_d536d06da399d8_1782291154195",
+      "from": "img_e1117dc998a2d8_1782291139787",
+      "to": "gen_0ed68a26b01718_1782291154180"
+    },
+    {
+      "id": "c_5870b2931afc48_1782291181539",
+      "from": "gen_0ed68a26b01718_1782291154180",
+      "to": "out_e247183dff86a_1782291181539"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  },
+  "board_x": -769.0,
+  "board_y": -88.0,
+  "tenant_id": "db16dd0a-f145-4fd1-a8df-7c2b2ff0008d",
+  "created_by": "ed994b3a-815f-4e1b-9332-df5459f6bf7f",
+  "logs": [
+    {
+      "id": "log_7d9e26214ffd38_1782291183595",
+      "createdAt": 1782291183595,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_4c41afbe8b53.png",
+          "name": "【哲风壁纸】天空-孤独-寂静.png"
+        }
+      ],
+      "runMs": 1875,
+      "error": "上游生图接口错误：{\"error\":{\"code\":\"InvalidEndpointOrModel.NotFound\",\"message\":\"The model or endpoint doubao-seedream-3-0-t2i-250415 does not exist or you do not have access to it. Request id: 02178229118146967b4ef5ba44a9620b39cdc0042b313b3270720\",\"param\":\"\",\"type\":\"Not Found\"}}"
+    }
+  ],
+  "settings": {},
+  "deleted_at": 1782444030113
+}

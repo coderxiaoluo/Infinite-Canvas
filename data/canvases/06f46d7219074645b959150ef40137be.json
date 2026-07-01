@@ -1,0 +1,46 @@
+{
+  "id": "06f46d7219074645b959150ef40137be",
+  "title": "未命名画布",
+  "icon": "layers",
+  "kind": "classic",
+  "owner": "",
+  "color": "",
+  "pinned": false,
+  "project": "默认项目",
+  "created_at": 1782811813161,
+  "updated_at": 1782811817955,
+  "nodes": [
+    {
+      "id": "image_vixk1u5",
+      "type": "image",
+      "x": 878,
+      "y": 428,
+      "url": "",
+      "images": [],
+      "caption": "",
+      "filename": "",
+      "apiProvider": "",
+      "model": "",
+      "manualModel": "",
+      "ratio": "wide",
+      "resolution": "1k",
+      "quality": "auto",
+      "count": 1,
+      "customWidth": "",
+      "customHeight": "",
+      "customRatioWidth": "",
+      "customRatioHeight": "",
+      "runStatus": "idle",
+      "runError": "",
+      "generatedImages": []
+    }
+  ],
+  "connections": [],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  },
+  "logs": [],
+  "settings": {}
+}

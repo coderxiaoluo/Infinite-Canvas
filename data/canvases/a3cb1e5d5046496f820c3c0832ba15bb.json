@@ -1,0 +1,293 @@
+{
+  "id": "a3cb1e5d5046496f820c3c0832ba15bb",
+  "title": "画布 17:26",
+  "icon": "🧩",
+  "kind": "classic",
+  "owner": "",
+  "color": "",
+  "pinned": false,
+  "project": "111b5ef311d14a7c847120b3e9cabcc4",
+  "created_at": 1782811580625,
+  "updated_at": 1782871027149,
+  "nodes": [
+    {
+      "id": "prompt_3849f03b6bb668_1782811594983",
+      "type": "prompt",
+      "x": 1754,
+      "y": 1136.5,
+      "text": ""
+    },
+    {
+      "id": "img_23ac754343da88_1782811598478",
+      "type": "image",
+      "x": 400,
+      "y": 391.5,
+      "url": "/assets/input/ai_ref_c04117d43a8a.png",
+      "name": "xiaobo.png",
+      "mediaKind": "image",
+      "_naturalSizeLoading": false,
+      "natural_w": 1254,
+      "natural_h": 1254
+    },
+    {
+      "id": "gen_82b71b96b834f_1782811606663",
+      "type": "generator",
+      "x": 765,
+      "y": 373,
+      "apiProvider": "volcengine",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "ratio": "square",
+      "resolution": "1k",
+      "customRatio": "",
+      "customSize": "",
+      "customRatioWidth": "",
+      "customRatioHeight": "",
+      "customWidth": "",
+      "customHeight": "",
+      "inputs": [
+        "img_23ac754343da88_1782811598478"
+      ],
+      "count": 5
+    },
+    {
+      "id": "out_84ce487c423f38_1782811612423",
+      "type": "output",
+      "x": 1304,
+      "y": 289,
+      "images": [],
+      "_pending": []
+    },
+    {
+      "id": "vid_9618cb8acc2b_1782868617164",
+      "type": "video",
+      "x": 1311,
+      "y": 622.5,
+      "apiProvider": "lingjing",
+      "model": "veo3.1-fast",
+      "duration": 5,
+      "aspectRatio": "16:9",
+      "resolution": "",
+      "enhancePrompt": false,
+      "enableUpsample": false,
+      "watermark": false,
+      "cameraFixed": false,
+      "generateAudio": false,
+      "useFrameRoles": false,
+      "multimodal": true,
+      "tempShLinks": [],
+      "inputs": []
+    }
+  ],
+  "connections": [
+    {
+      "id": "c_ff0eb69ed163e_1782811606668",
+      "from": "img_23ac754343da88_1782811598478",
+      "to": "gen_82b71b96b834f_1782811606663"
+    },
+    {
+      "id": "c_feb4160192dc38_1782811612423",
+      "from": "gen_82b71b96b834f_1782811606663",
+      "to": "out_84ce487c423f38_1782811612423"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  },
+  "board_x": 747.0,
+  "board_y": 477.0,
+  "logs": [
+    {
+      "id": "log_1c7d95c225a11_1782811627149",
+      "createdAt": 1782811627149,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1905,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    },
+    {
+      "id": "log_c6beb706731c58_1782811627141",
+      "createdAt": 1782811627141,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1897,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    },
+    {
+      "id": "log_c72c503d894418_1782811627130",
+      "createdAt": 1782811627130,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1886,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    },
+    {
+      "id": "log_7ba6e9268dadd8_1782811627123",
+      "createdAt": 1782811627123,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1879,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    },
+    {
+      "id": "log_9545d0380e3218_1782811627116",
+      "createdAt": 1782811627116,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1872,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    },
+    {
+      "id": "log_86aba927c4fe08_1782811614608",
+      "createdAt": 1782811614608,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1917,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    },
+    {
+      "id": "log_18014cde916db8_1782811614596",
+      "createdAt": 1782811614596,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1905,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    },
+    {
+      "id": "log_3d790de53a5068_1782811614590",
+      "createdAt": 1782811614590,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1899,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    },
+    {
+      "id": "log_b74126a9fbac9_1782811614578",
+      "createdAt": 1782811614578,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1887,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    },
+    {
+      "id": "log_6b25167fb59c9_1782811614571",
+      "createdAt": 1782811614571,
+      "status": "failed",
+      "platform": "火山引擎",
+      "nodeType": "generator",
+      "model": "doubao-seedream-3-0-t2i-250415",
+      "request": {},
+      "prompt": "Edit the reference images.",
+      "outputs": [],
+      "refs": [
+        {
+          "url": "/assets/input/ai_ref_c04117d43a8a.png",
+          "name": "xiaobo.png"
+        }
+      ],
+      "runMs": 1879,
+      "error": "API Key 无效或已过期，请到「API 设置」检查 Key。"
+    }
+  ],
+  "settings": {}
+}
